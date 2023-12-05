@@ -7,7 +7,7 @@ pygame.init()
 c1, c2 = 2, 2
 w = 0.0001
 
-bat = pygame.image.load("bat.png")
+bird = pygame.image.load("bird.png")
 
 screen_width, screen_height = 800, 800
 tile_size = 20
@@ -106,7 +106,7 @@ def main():
 
         for agent in swarm.agents:
             # pygame.draw.circle(screen, (255, 255, 255), tuple(agent.position), agent_radius)
-            screen.blit(bat, agent.position)
+            screen.blit(bird, agent.position)
             agent.vel = update_velocity(agent, swarm.g_best_pos)
             agent.update_p_best()
             agent.update_position()
