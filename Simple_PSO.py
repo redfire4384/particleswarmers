@@ -7,14 +7,17 @@ pygame.init()
 c1, c2 = 2, 2
 w = 0.0001
 
-screen_width, screen_height = 500, 500
-tile_size = 10
+bat = pygame.image.load("bat.png")
+
+screen_width, screen_height = 800, 800
+tile_size = 20
 noise_map_size = (screen_width // tile_size, screen_height // tile_size)
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
 agent_radius = tile_size // 2
 
-def make_height_map(smoothing_size=2):
+
+def make_height_map(smoothing_size=5):
 
     raw_map = np.random.random(noise_map_size)
     padded_map = np.pad(raw_map, smoothing_size // 2, mode='edge')
@@ -91,7 +94,7 @@ def update_velocity(agent, g_best_pos):
 
 def main():
     noise_map = make_height_map()
-    swarm = Swarm(10, noise_map)
+    swarm = Swarm(100, noise_map)
     running = True
     while running:
         for event in pygame.event.get():
@@ -102,14 +105,15 @@ def main():
         swarm.update_global_best()
 
         for agent in swarm.agents:
-            pygame.draw.circle(screen, (255, 255, 255), tuple(agent.position), agent_radius)
+            # pygame.draw.circle(screen, (255, 255, 255), tuple(agent.position), agent_radius)
+            screen.blit(bat, agent.position)
             agent.vel = update_velocity(agent, swarm.g_best_pos)
             agent.update_p_best()
             agent.update_position()
             agent.update_fitness()
 
         pygame.display.flip()
-        clock.tick(10)
+        clock.tick(60)
         screen.fill((0,0,0))
 
 main()
