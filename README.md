@@ -1,2 +1,2 @@
 # particleswarmers
-particles, they swarm man
+particles man, they swarm dude
