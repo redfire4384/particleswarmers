@@ -11,6 +11,7 @@ c1, c2 = 2, 2
 w = 0.0001
 screen_width, screen_height = 1800, 800
 tile_size = 20
+swarm_size = 100
 
 # Derived Constants
 noise_map_size = (screen_width // tile_size, screen_height // tile_size)
@@ -113,7 +114,7 @@ def update_velocity(agent, g_best_pos):
 
 def main():
     noise_map = make_height_map()
-    swarm = Swarm(100, noise_map)
+    swarm = Swarm(swarm_size, noise_map)
     
     bird = pygame.image.load("bird.png")
     running = True
