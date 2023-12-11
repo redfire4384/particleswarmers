@@ -26,6 +26,20 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 agent_radius = tile_size // 2
 clock = pygame.time.Clock()
 
+def make_tent_map(numvar):
+    def gen_z():
+        running = True
+        while running:
+            x = random.uniform(0,1)
+            if x not in [0,.25,.5,.75,1]:
+                running = False
+        return x
+    
+    z = [gen_z()]
+    for i in range(numvar):
+        z.append(u*(1-2*abs(z[i]-0.5)))
+    return z
+
 def chaotic_disturbance(numvar):
     def gen_z():
         running = True
@@ -127,19 +141,16 @@ class Swarm:
 def update_velocity(agent, g_best_pos, Cr):
     # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
 
-    # r1 = random.uniform(0, 1)
-    # r2 = random.uniform(0, 1) 
-    # newCR = k * CR * (1-CR) where k = 4
-
     new_velocity_x = w * agent.vel[0] + c1 * Cr * (agent.p_best[0] - agent.position[0]) + c2 * (1-Cr) * (g_best_pos[0] - agent.position[0])
     new_velocity_y = w * agent.vel[1] + c1 * Cr * (agent.p_best[1] - agent.position[1]) + c2 * (1-Cr) * (g_best_pos[1] - agent.position[1])
 
     new_velocity = [new_velocity_x, new_velocity_y]
 
-    # print(new_velocity)
     return new_velocity
 
 def main():
+    # Execute code
+    
     noise_map = make_height_map()
     swarm = Swarm(swarm_size, noise_map)
     Cr = chaotic_disturbance(swarm_size)
