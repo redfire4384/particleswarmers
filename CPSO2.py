@@ -76,7 +76,14 @@ def make_height_map(smoothing_size=5):
 def value_to_color(value):
     # Converts values to a corresponding color value
 
-    return (int(value * 255), 0, int((1 - value) * 255))
+    # #0097A7 to #FFAB40
+    # return (int(value * 255), 151 + int(value * 20), 64 + int((value) * 103))
+
+    # #01455D to #FFAB40
+    # return (1 + int(value * 254), 69 + int(value * 102), 93 - int((value) * 29))
+
+    # #011632 to #85D5E6
+    return (1 + int(value * 132), 22 + int(value * 191), 50 + int((value) * 180))
 
 def draw_noise_map(noise_map):
     # Draws noise map to pygame window
