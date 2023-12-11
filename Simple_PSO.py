@@ -12,6 +12,8 @@ w = 0.0001
 screen_width, screen_height = 1800, 800
 tile_size = 20
 swarm_size = 100
+bird = pygame.image.load("bird.png")
+
 
 # Derived Constants
 noise_map_size = (screen_width // tile_size, screen_height // tile_size)
@@ -116,7 +118,6 @@ def main():
     noise_map = make_height_map()
     swarm = Swarm(swarm_size, noise_map)
     
-    bird = pygame.image.load("bird.png")
     running = True
     while running:
         # Runs PSO Loop
