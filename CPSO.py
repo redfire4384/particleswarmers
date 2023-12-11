@@ -79,7 +79,8 @@ def make_height_map(smoothing_size=5):
 def value_to_color(value):
     # Converts values to a corresponding color value
 
-    return (int(value * 255), 0, int((1 - value) * 255))
+    # #011632 to #85D5E6
+    return (1 + int(value * 132), 22 + int(value * 191), 50 + int((value) * 180))
 
 def draw_noise_map(noise_map):
     # Draws noise map to pygame window
@@ -166,6 +167,7 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
+        
         draw_noise_map(noise_map)
         swarm.update_global_best()
 
@@ -177,7 +179,7 @@ def main():
             agent.update_fitness()
 
         pygame.display.flip()
-        clock.tick(60)
+
         screen.fill((0,0,0))
 
 # Startup Code

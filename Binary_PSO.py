@@ -21,11 +21,12 @@ p = c1 + c2
 w = 2/(abs(2 - p - np.sqrt(p**2 - 4 * p)))
 noise_map_size = (screen_width // tile_size, screen_height // tile_size)
 screen = pygame.display.set_mode((screen_width, screen_height))
-clock = pygame.time.Clock()
 agent_radius = tile_size // 2
+clock = pygame.time.Clock()
 
 
 def make_height_map(smoothing_size=5):
+    # Creates random search space
 
     raw_map = np.random.random(noise_map_size)
     raw_map[noise_map_size[0] // 2][noise_map_size[1] // 2] = 0
@@ -46,16 +47,22 @@ def make_height_map(smoothing_size=5):
     return normalized_map
 
 def value_to_color(value):
-    # return (255, int((1 - value) * 255), int((1 - value) * 255))
-    return (int(value * 255), 0, int((1 - value) * 255))
+    # Converts values to a corresponding color value
+
+    # #011632 to #85D5E6
+    return (1 + int(value * 132), 22 + int(value * 191), 50 + int((value) * 180))
 
 def draw_noise_map(noise_map):
+    # Draws noise map to pygame window
+
     for x in range(noise_map_size[0]):
         for y in range(noise_map_size[1]):
             color = value_to_color(noise_map[x, y])
             pygame.draw.rect(screen, color, (x * tile_size, y * tile_size, tile_size, tile_size))
 
 class Agent:
+    # Particle object
+    
     def __init__(self, pos, noise_map):
         self.position = pos
         self.vel = [1, 1]
@@ -65,28 +72,37 @@ class Agent:
         self.noise_map = noise_map
 
     def update_fitness(self):
+        # Updates fitness of agent based on current position
+
         tile_x = int(self.position[0] // tile_size)
         tile_y = int(self.position[1] // tile_size)
         self.fitness = self.noise_map[tile_x, tile_y]
 
     def update_position(self):
+        # Updates position of agent based on velocity, bounded within the window
+
         self.position = np.add(self.position, self.vel)
         x, y = self.position[0], self.position[1]
         self.position[0] = min(screen_width - 10, max(0, x))
         self.position[1] = min(screen_height - 10, max(0, y))
     
     def update_p_best(self):
+        # Updates personal best fitness and position
+
         if self.p_best_fit is None or self.fitness < self.p_best_fit:
             self.p_best_fit = self.fitness
             self.p_best = self.position
 
 class Swarm:
+    # Swarm object
     def __init__(self, agentnum, noise_map):
         self.agents = [Agent([random.randrange(0, screen_width), random.randrange(0, screen_height)], noise_map) for i in range(agentnum)]
         self.g_best_pos = None
         self.g_best_fit = None
 
     def update_global_best(self):
+        # Updates global best position and fitness 
+
         for agent in self.agents:
             if self.g_best_fit is None or agent.fitness < self.g_best_fit:
                 self.g_best_fit = agent.fitness
@@ -96,6 +112,8 @@ def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 def update_velocity(agent, g_best_pos):
+    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
+
     r1 = random.uniform(0, 1)
     r2 = random.uniform(0, 1)
 
@@ -107,6 +125,7 @@ def update_velocity(agent, g_best_pos):
     probability_x = sigmoid(new_velocity[0])
     probability_y = sigmoid(new_velocity[1])
 
+    # Sigmoid function to determine whether or not binary capabilities are applied to agent
     if random.uniform(0, 1) < probability_x:
         agent.position[0] = 1 - agent.position[0]
     if random.uniform(0, 1) < probability_y:
@@ -115,6 +134,8 @@ def update_velocity(agent, g_best_pos):
     return new_velocity
 
 def main():
+    # Executes code
+
     noise_map = make_height_map()
     swarm = Swarm(100, noise_map)
     running = True
@@ -127,7 +148,6 @@ def main():
         swarm.update_global_best()
 
         for agent in swarm.agents:
-            # pygame.draw.circle(screen, (255, 255, 255), tuple(agent.position), agent_radius)
             screen.blit(bird, agent.position)
             agent.vel = update_velocity(agent, swarm.g_best_pos)
             agent.update_p_best()

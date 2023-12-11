@@ -3,6 +3,7 @@
 import pygame
 import random
 import numpy as np
+from quicksort import quicksort
 
 pygame.init()
 
@@ -11,7 +12,8 @@ c1, c2 = 2, 2
 w = 0.0001
 k = 4
 u = 1
-screen_width, screen_height = 1800, 800
+y = 0.5
+screen_width, screen_height = 800, 800
 tile_size = 20
 swarm_size = 100
 D = 2
@@ -24,6 +26,7 @@ agent_radius = tile_size // 2
 clock = pygame.time.Clock()
 
 def make_tent_map(chaosnum):
+    # Generate chaos vector of size chaosnum
     def gen_z():
         running = True
         while running:
@@ -37,21 +40,18 @@ def make_tent_map(chaosnum):
         z.append(u*(1-2*abs(z[i]-0.5)))
     return z
 
-def chaotic_disturbance(numvar):
-    def gen_z():
-        running = True
-        while running:
-            x = random.uniform(0,1)
-            if x not in [0,.25,.5,.75,1]:
-                running = False
-        return x
-    
-    z = [gen_z()]
+def chaotic_disturbance(z, min, maxx, maxy):
+    # add chaotic disturbance to given array z with search space bounds min maxx and maxy
 
-    for i in range(numvar):
-        z.append(k*z[i]*(1-z[i]))
+    psi = optimum_cv(z, min, maxx, maxy)
+    zprime = [[((1-y)*psi[i][0] + y * z[i].position[0]), ((1-y)*psi[i][1] + y * z[i].position[1])]for i in range(len(z)-1)]
+    return zprime
 
-    return z
+def optimum_cv(x, min, maxx, maxy):
+    # calculate optimal chaos vector for given array x within search space bounded by min maxx and maxy
+     
+    psi = [[(i.p_best[0] - min)/(maxx - min), (i.p_best[1] - min)/(maxy - min)] for i in x]
+    return psi
 
 def make_height_map(smoothing_size=5):
     # Creates random search space
@@ -75,12 +75,6 @@ def make_height_map(smoothing_size=5):
 
 def value_to_color(value):
     # Converts values to a corresponding color value
-
-    # #0097A7 to #FFAB40
-    # return (int(value * 255), 151 + int(value * 20), 64 + int((value) * 103))
-
-    # #01455D to #FFAB40
-    # return (1 + int(value * 254), 69 + int(value * 102), 93 - int((value) * 29))
 
     # #011632 to #85D5E6
     return (1 + int(value * 132), 22 + int(value * 191), 50 + int((value) * 180))
@@ -128,14 +122,16 @@ class Agent:
 class Swarm:
     # Swarm object
     def __init__(self, agentnum, noise_map):
-        
-        # self.agents = [Agent((random.randrange(0, screen_width), random.randrange(0, screen_height)), noise_map) for i in range(agentnum)]
         xvars = make_tent_map(agentnum)
         yvars = make_tent_map(agentnum)
         self.z = [xvars, yvars]
         self.agents = self.gen_agents(0, screen_width, screen_height, noise_map, agentnum,self.z) 
         self.g_best_pos = None
         self.g_best_fit = None
+
+    def distance_to_g_best(self, xy):
+        # calculates distance to g best
+        return np.sum(np.square(np.array(self.g_best_pos) - np.array(xy)))
 
     def update_global_best(self):
         # Updates global best position and fitness 
@@ -145,9 +141,16 @@ class Swarm:
                 self.g_best_pos = agent.position
     
     def gen_agents(self, min, maxx, maxy, noisemap, agentnum,z):
-
+        # generates agents
         agents = [Agent([min + z[0][i]*(maxx-min), min + z[1][i]*(maxy-min)], noisemap) for i in range(agentnum)]
         return agents
+    
+    def rank_agents(self):
+        # orders agents in ascending order by pbest 
+
+        dist = [[self.distance_to_g_best(agent.p_best), agent] for agent in self.agents]
+        ranked = quicksort(dist, 0, len(dist) - 1)
+        return ranked
     
 
 def update_velocity(agent, g_best_pos):
@@ -155,7 +158,6 @@ def update_velocity(agent, g_best_pos):
 
     r1 = random.uniform(0, 1)
     r2 = random.uniform(0, 1) 
-    # newCR = k * CR * (1-CR) where k = 4
 
 
     new_velocity_x = w * agent.vel[0] + c1 * r1 * (agent.p_best[0] - agent.position[0]) + c2 * r2 * (g_best_pos[0] - agent.position[0])
@@ -165,6 +167,8 @@ def update_velocity(agent, g_best_pos):
     return new_velocity
 
 def main():
+    # executes code
+
     noise_map = make_height_map()
     swarm = Swarm(swarm_size, noise_map)
 
@@ -173,21 +177,41 @@ def main():
     while running:
         # Runs pygame
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
         for i in range(max_iters):
+            
+            # Closes pygame even if window closed before max_iters reached
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    break
+            if not running:
+                break
+
+
+
             # Runs PSO loop
             draw_noise_map(noise_map)
             swarm.update_global_best()
+            swarm.rank_agents()
+
 
             for agent in swarm.agents:
+                old_pos = agent.position
                 screen.blit(bird, agent.position)
                 agent.vel = update_velocity(agent, swarm.g_best_pos)
                 agent.update_p_best()
                 agent.update_position()
                 agent.update_fitness()
+
+                # Adds chaotic disturbance to bottom 30% of agents after being ranked by p_best
+                if old_pos[0] == agent.position[0] and old_pos[1] == agent.position[1] and i <= max_iters//2:
+                    bottom_thirty = swarm.agents[1 - int(len(swarm.agents)*0.3):]
+                    disturbance = chaotic_disturbance(bottom_thirty, 0, screen_width, screen_height)
+                    for i in range(len(disturbance)-1):
+                        bottom_thirty[i].position = [0 + disturbance[i][0]*(screen_width-0), 0 + disturbance[i][1]*(screen_height-0)]
+
+                    
+
 
             pygame.display.flip()
             clock.tick(60)
@@ -196,5 +220,3 @@ def main():
 # Startup Code
 
 main()
-
-# print(chaotic_disturbance(10))
