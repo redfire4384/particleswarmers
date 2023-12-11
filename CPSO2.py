@@ -173,49 +173,57 @@ def main():
 
     bird = pygame.image.load("bird.png")
     running = True
+    condition = True
     while running:
-        # Runs pygame
-
-        for i in range(max_iters):
-            
-            # Closes pygame even if window closed before max_iters reached
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    break
-            if not running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
                 break
+        # Runs pygame
+        number = 1
+        number += 1
+        if condition:
+            for i in range(max_iters):
+                
+                # Closes pygame even if window closed before max_iters reached
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        break
+                if not running:
+                    break
 
 
 
-            # Runs PSO loop
-            draw_noise_map(noise_map)
-            swarm.update_global_best()
-            swarm.rank_agents()
+                # Runs PSO loop
+                draw_noise_map(noise_map)
+                swarm.update_global_best()
+                swarm.rank_agents()
 
 
-            for agent in swarm.agents:
-                if i % 3 == 0:
+                for agent in swarm.agents:
                     old_pos = agent.p_best
-                screen.blit(bird, agent.position)
-                agent.vel = update_velocity(agent, swarm.g_best_pos)
-                agent.update_position()
-                agent.update_p_best()
-                agent.update_fitness()
+                    screen.blit(bird, agent.position)
+                    agent.vel = update_velocity(agent, swarm.g_best_pos)
+                    agent.update_position()
+                    agent.update_p_best()
+                    agent.update_fitness()
 
-                # Adds chaotic disturbance to bottom 30% of agents after being ranked by p_best
-                if old_pos[0] == agent.p_best[0] and old_pos[1] == agent.p_best[1] and i <= max_iters//2:
-                    bottom_thirty = swarm.agents[1 - int(len(swarm.agents)*0.3):]
-                    disturbance = chaotic_disturbance(bottom_thirty, 0, screen_width, screen_height)
-                    for i in range(len(disturbance)-1):
-                        bottom_thirty[i].position = [0 + disturbance[i][0]*(screen_width-0), 0 + disturbance[i][1]*(screen_height-0)]
+                    # Adds chaotic disturbance to bottom 30% of agents after being ranked by p_best
+                    if old_pos[0] == agent.p_best[0] and old_pos[1] == agent.p_best[1] and i <= max_iters//2:
+                        bottom_thirty = swarm.agents[1 - int(len(swarm.agents)*0.3):]
+                        disturbance = chaotic_disturbance(bottom_thirty, 0, screen_width, screen_height)
+                        for i in range(len(disturbance)-1):
+                            bottom_thirty[i].position = [0 + disturbance[i][0]*(screen_width-0), 0 + disturbance[i][1]*(screen_height-0)]
 
-                    
+                        
 
 
-            pygame.display.flip()
-            clock.tick(60)
-            screen.fill((0,0,0))
+                pygame.display.flip()
+                clock.tick(60)
+                screen.fill((0,0,0))
+            condition = False
+    print(number)
 
 # Startup Code
 
