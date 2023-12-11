@@ -14,7 +14,7 @@ k = 4
 u = 1
 y = 0.5
 screen_width, screen_height = 800, 800
-tile_size = 20
+tile_size = 10
 swarm_size = 100
 D = 2
 max_iters = 5000
@@ -196,7 +196,7 @@ def main():
 
 
             for agent in swarm.agents:
-                old_pos = agent.position
+                old_pos = agent.p_best
                 screen.blit(bird, agent.position)
                 agent.vel = update_velocity(agent, swarm.g_best_pos)
                 agent.update_p_best()
@@ -204,7 +204,7 @@ def main():
                 agent.update_fitness()
 
                 # Adds chaotic disturbance to bottom 30% of agents after being ranked by p_best
-                if old_pos[0] == agent.position[0] and old_pos[1] == agent.position[1] and i <= max_iters//2:
+                if old_pos[0] == agent.p_best[0] and old_pos[1] == agent.p_best[1] and i <= max_iters//2:
                     bottom_thirty = swarm.agents[1 - int(len(swarm.agents)*0.3):]
                     disturbance = chaotic_disturbance(bottom_thirty, 0, screen_width, screen_height)
                     for i in range(len(disturbance)-1):

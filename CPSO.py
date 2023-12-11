@@ -150,7 +150,7 @@ def update_velocity(agent, g_best_pos, Cr):
 
 def main():
     # Execute code
-    
+
     noise_map = make_height_map()
     swarm = Swarm(swarm_size, noise_map)
     Cr = chaotic_disturbance(swarm_size)
@@ -182,5 +182,3 @@ def main():
 # Startup Code
 
 main()
-
-print(chaotic_disturbance(10))
