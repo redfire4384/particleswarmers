@@ -7,33 +7,38 @@ import numpy as np
 pygame.init()
 
 # Constants
-c1, c2 = 2, 2
-w = 0.0001
+c1, c2 = 2.49445, 2.49445
 k = 4
 u = 1
-screen_width, screen_height = 1800, 800
+screen_width, screen_height = 800, 800
 tile_size = 20
 swarm_size = 100
 
+if screen_width % tile_size != 0:
+    raise ValueError("nuh uh")
+
 # Derived Constants
+p = c1 + c2
+w = 2/(abs(2 - p - np.sqrt(p**2 - 4 * p)))
+
 map_size = (screen_width // tile_size, screen_height // tile_size)
 screen = pygame.display.set_mode((screen_width, screen_height))
 agent_radius = tile_size // 2
 clock = pygame.time.Clock()
 
-# def make_tent_map(numvar):
-#     def gen_z():
-#         running = True
-#         while running:
-#             x = random.uniform(0,1)
-#             if x not in [0,.25,.5,.75,1]:
-#                 running = False
-#         return x
+def make_tent_map(numvar):
+    def gen_z():
+        running = True
+        while running:
+            x = random.uniform(0,1)
+            if x not in [0,.25,.5,.75,1]:
+                running = False
+        return x
     
-#     z = [gen_z()]
-#     for i in range(numvar):
-#         z.append(u*(1-2*abs(z[i]-0.5)))
-#     return z
+    z = [gen_z()]
+    for i in range(numvar):
+        z.append(u*(1-2*abs(z[i]-0.5)))
+    return z
 
 def chaotic_disturbance(numvar):
     def gen_z():
@@ -139,11 +144,12 @@ def update_velocity(agent, g_best_pos, Cr):
     # r2 = random.uniform(0, 1) 
     # newCR = k * CR * (1-CR) where k = 4
 
-
     new_velocity_x = w * agent.vel[0] + c1 * Cr * (agent.p_best[0] - agent.position[0]) + c2 * (1-Cr) * (g_best_pos[0] - agent.position[0])
     new_velocity_y = w * agent.vel[1] + c1 * Cr * (agent.p_best[1] - agent.position[1]) + c2 * (1-Cr) * (g_best_pos[1] - agent.position[1])
 
     new_velocity = [new_velocity_x, new_velocity_y]
+
+    # print(new_velocity)
     return new_velocity
 
 def main():
@@ -163,9 +169,9 @@ def main():
         draw_noise_map(noise_map)
         swarm.update_global_best()
 
-        for agent in swarm.agents:
+        for cr_num, agent in enumerate(swarm.agents):
             screen.blit(bird, agent.position)
-            agent.vel = update_velocity(agent, swarm.g_best_pos, Cr)
+            agent.vel = update_velocity(agent, swarm.g_best_pos, Cr[cr_num])
             agent.update_p_best()
             agent.update_position()
             agent.update_fitness()
@@ -178,4 +184,4 @@ def main():
 
 main()
 
-# print(chaotic_disturbance(10))
+print(chaotic_disturbance(10))

@@ -4,13 +4,21 @@ import numpy as np
 
 pygame.init()
 
-c1, c2 = 2, 2
-w = 0.0001
-
 bird = pygame.image.load("bird.png")
-
+# Constants
+c1, c2 = 2.49445, 2.49445
+k = 4
+u = 1
 screen_width, screen_height = 800, 800
 tile_size = 20
+swarm_size = 100
+
+if screen_width % tile_size != 0:
+    raise ValueError("nuh uh")
+
+# Derived Constants
+p = c1 + c2
+w = 2/(abs(2 - p - np.sqrt(p**2 - 4 * p)))
 noise_map_size = (screen_width // tile_size, screen_height // tile_size)
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
@@ -38,8 +46,8 @@ def make_height_map(smoothing_size=5):
     return normalized_map
 
 def value_to_color(value):
-    return (255, int((1 - value) * 255), int((1 - value) * 255))
-    # return (int(value * 255), 0, int((1 - value) * 255))
+    # return (255, int((1 - value) * 255), int((1 - value) * 255))
+    return (int(value * 255), 0, int((1 - value) * 255))
 
 def draw_noise_map(noise_map):
     for x in range(noise_map_size[0]):
