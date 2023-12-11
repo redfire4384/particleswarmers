@@ -171,8 +171,8 @@ def main():
         for cr_num, agent in enumerate(swarm.agents):
             screen.blit(bird, agent.position)
             agent.vel = update_velocity(agent, swarm.g_best_pos, Cr[cr_num])
-            agent.update_p_best()
             agent.update_position()
+            agent.update_p_best()
             agent.update_fitness()
 
         pygame.display.flip()

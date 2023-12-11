@@ -195,11 +195,12 @@ def main():
 
 
             for agent in swarm.agents:
-                old_pos = agent.p_best
+                if i % 3 == 0:
+                    old_pos = agent.p_best
                 screen.blit(bird, agent.position)
                 agent.vel = update_velocity(agent, swarm.g_best_pos)
-                agent.update_p_best()
                 agent.update_position()
+                agent.update_p_best()
                 agent.update_fitness()
 
                 # Adds chaotic disturbance to bottom 30% of agents after being ranked by p_best

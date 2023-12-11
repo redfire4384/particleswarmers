@@ -9,7 +9,7 @@ pygame.init()
 # Constants
 c1, c2 = 2, 2
 w = 0.0001
-screen_width, screen_height = 1800, 800
+screen_width, screen_height = 800, 800
 tile_size = 20
 swarm_size = 100
 bird = pygame.image.load("bird.png")
@@ -133,8 +133,8 @@ def main():
         for agent in swarm.agents:
             screen.blit(bird, agent.position)
             agent.vel = update_velocity(agent, swarm.g_best_pos)
-            agent.update_p_best()
             agent.update_position()
+            agent.update_p_best()
             agent.update_fitness()
 
         pygame.display.flip()

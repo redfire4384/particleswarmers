@@ -150,8 +150,8 @@ def main():
         for agent in swarm.agents:
             screen.blit(bird, agent.position)
             agent.vel = update_velocity(agent, swarm.g_best_pos)
-            agent.update_p_best()
             agent.update_position()
+            agent.update_p_best()
             agent.update_fitness()
 
         pygame.display.flip()
