@@ -26,20 +26,6 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 agent_radius = tile_size // 2
 clock = pygame.time.Clock()
 
-def make_tent_map(numvar):
-    def gen_z():
-        running = True
-        while running:
-            x = random.uniform(0,1)
-            if x not in [0,.25,.5,.75,1]:
-                running = False
-        return x
-    
-    z = [gen_z()]
-    for i in range(numvar):
-        z.append(u*(1-2*abs(z[i]-0.5)))
-    return z
-
 def chaotic_disturbance(numvar):
     def gen_z():
         running = True
