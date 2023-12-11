@@ -15,6 +15,7 @@ screen_width, screen_height = 1800, 800
 tile_size = 20
 swarm_size = 100
 D = 2
+max_iters = 5000
 
 # Derived Constants
 map_size = (screen_width // tile_size, screen_height // tile_size)
@@ -122,6 +123,10 @@ class Swarm:
     def __init__(self, agentnum, noise_map):
         
         # self.agents = [Agent((random.randrange(0, screen_width), random.randrange(0, screen_height)), noise_map) for i in range(agentnum)]
+        xvars = make_tent_map(agentnum)
+        yvars = make_tent_map(agentnum)
+        self.z = [xvars, yvars]
+        self.agents = self.gen_agents(0, screen_width, screen_height, noise_map, agentnum,self.z) 
         self.g_best_pos = None
         self.g_best_fit = None
 
@@ -132,24 +137,22 @@ class Swarm:
                 self.g_best_fit = agent.fitness
                 self.g_best_pos = agent.position
     
-    def gen_agents(self, min, max, noisemap, agentnum):
-        xvars = make_tent_map(agentnum)
-        yvars = make_tent_map(agentnum)
+    def gen_agents(self, min, maxx, maxy, noisemap, agentnum,z):
 
-        agents = [Agent((min + xvars[i]*(max-min)), (min + yvars[i]*(max-min)), noisemap) for i in range(agentnum)]
+        agents = [Agent([min + z[0][i]*(maxx-min), min + z[1][i]*(maxy-min)], noisemap) for i in range(agentnum)]
         return agents
     
 
-def update_velocity(agent, g_best_pos, Cr):
+def update_velocity(agent, g_best_pos):
     # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
 
-    # r1 = random.uniform(0, 1)
-    # r2 = random.uniform(0, 1) 
+    r1 = random.uniform(0, 1)
+    r2 = random.uniform(0, 1) 
     # newCR = k * CR * (1-CR) where k = 4
 
 
-    new_velocity_x = w * agent.vel[0] + c1 * Cr * (agent.p_best[0] - agent.position[0]) + c2 * (1-Cr) * (g_best_pos[0] - agent.position[0])
-    new_velocity_y = w * agent.vel[1] + c1 * Cr * (agent.p_best[1] - agent.position[1]) + c2 * (1-Cr) * (g_best_pos[1] - agent.position[1])
+    new_velocity_x = w * agent.vel[0] + c1 * r1 * (agent.p_best[0] - agent.position[0]) + c2 * r2 * (g_best_pos[0] - agent.position[0])
+    new_velocity_y = w * agent.vel[1] + c1 * r1 * (agent.p_best[1] - agent.position[1]) + c2 * r2 * (g_best_pos[1] - agent.position[1])
 
     new_velocity = [new_velocity_x, new_velocity_y]
     return new_velocity
@@ -157,31 +160,31 @@ def update_velocity(agent, g_best_pos, Cr):
 def main():
     noise_map = make_height_map()
     swarm = Swarm(swarm_size, noise_map)
-    z = make_tent_map(D)
-    Cr = chaotic_disturbance(swarm_size)
 
     bird = pygame.image.load("bird.png")
     running = True
     while running:
-        # Runs PSO Loop
+        # Runs pygame
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
-        draw_noise_map(noise_map)
-        swarm.update_global_best()
+        for i in range(max_iters):
+            # Runs PSO loop
+            draw_noise_map(noise_map)
+            swarm.update_global_best()
 
-        for agent in swarm.agents:
-            screen.blit(bird, agent.position)
-            agent.vel = update_velocity(agent, swarm.g_best_pos, Cr)
-            agent.update_p_best()
-            agent.update_position()
-            agent.update_fitness()
+            for agent in swarm.agents:
+                screen.blit(bird, agent.position)
+                agent.vel = update_velocity(agent, swarm.g_best_pos)
+                agent.update_p_best()
+                agent.update_position()
+                agent.update_fitness()
 
-        pygame.display.flip()
-        clock.tick(60)
-        screen.fill((0,0,0))
+            pygame.display.flip()
+            clock.tick(60)
+            screen.fill((0,0,0))
 
 # Startup Code
 
