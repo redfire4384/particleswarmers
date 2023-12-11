@@ -16,7 +16,6 @@ y = 0.5
 screen_width, screen_height = 800, 800
 tile_size = 10
 swarm_size = 100
-D = 2
 max_iters = 5000
 
 # Derived Constants
