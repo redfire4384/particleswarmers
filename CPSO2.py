@@ -17,6 +17,7 @@ screen_width, screen_height = 800, 800
 tile_size = 10
 swarm_size = 100
 max_iters = 5000
+bird = pygame.image.load("bird.png")
 
 # Derived Constants
 map_size = (screen_width // tile_size, screen_height // tile_size)
@@ -86,6 +87,20 @@ def draw_noise_map(noise_map):
             color = value_to_color(noise_map[x, y])
             pygame.draw.rect(screen, color, (x * tile_size, y * tile_size, tile_size, tile_size))
 
+
+def update_velocity(agent, g_best_pos):
+    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
+
+    r1 = random.uniform(0, 1)
+    r2 = random.uniform(0, 1) 
+
+
+    new_velocity_x = w * agent.vel[0] + c1 * r1 * (agent.p_best[0] - agent.position[0]) + c2 * r2 * (g_best_pos[0] - agent.position[0])
+    new_velocity_y = w * agent.vel[1] + c1 * r1 * (agent.p_best[1] - agent.position[1]) + c2 * r2 * (g_best_pos[1] - agent.position[1])
+
+    new_velocity = [new_velocity_x, new_velocity_y]
+    return new_velocity
+
 class Agent:
     # Particle object
     def __init__(self, pos, noise_map):
@@ -152,26 +167,12 @@ class Swarm:
         return ranked
     
 
-def update_velocity(agent, g_best_pos):
-    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
-
-    r1 = random.uniform(0, 1)
-    r2 = random.uniform(0, 1) 
-
-
-    new_velocity_x = w * agent.vel[0] + c1 * r1 * (agent.p_best[0] - agent.position[0]) + c2 * r2 * (g_best_pos[0] - agent.position[0])
-    new_velocity_y = w * agent.vel[1] + c1 * r1 * (agent.p_best[1] - agent.position[1]) + c2 * r2 * (g_best_pos[1] - agent.position[1])
-
-    new_velocity = [new_velocity_x, new_velocity_y]
-    return new_velocity
-
 def main():
     # executes code
 
     noise_map = make_height_map()
     swarm = Swarm(swarm_size, noise_map)
 
-    bird = pygame.image.load("bird.png")
     running = True
     condition = True
     while running:
@@ -180,8 +181,6 @@ def main():
                 running = False
                 break
         # Runs pygame
-        number = 1
-        number += 1
         if condition:
             for i in range(max_iters):
                 
@@ -223,7 +222,6 @@ def main():
                 clock.tick(60)
                 screen.fill((0,0,0))
             condition = False
-    print(number)
 
 # Startup Code
 

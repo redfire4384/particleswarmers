@@ -13,6 +13,8 @@ u = 1
 screen_width, screen_height = 800, 800
 tile_size = 20
 swarm_size = 100
+max_iters = 5000
+bird = pygame.image.load("bird.png")
 
 if screen_width % tile_size != 0:
     raise ValueError("nuh uh")
@@ -90,6 +92,17 @@ def draw_noise_map(noise_map):
             color = value_to_color(noise_map[x, y])
             pygame.draw.rect(screen, color, (x * tile_size, y * tile_size, tile_size, tile_size))
 
+
+def update_velocity(agent, g_best_pos, Cr):
+    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
+
+    new_velocity_x = w * agent.vel[0] + c1 * Cr * (agent.p_best[0] - agent.position[0]) + c2 * (1-Cr) * (g_best_pos[0] - agent.position[0])
+    new_velocity_y = w * agent.vel[1] + c1 * Cr * (agent.p_best[1] - agent.position[1]) + c2 * (1-Cr) * (g_best_pos[1] - agent.position[1])
+
+    new_velocity = [new_velocity_x, new_velocity_y]
+
+    return new_velocity
+
 class Agent:
     # Particle object
     def __init__(self, pos, noise_map):
@@ -138,16 +151,6 @@ class Swarm:
     
     
 
-def update_velocity(agent, g_best_pos, Cr):
-    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
-
-    new_velocity_x = w * agent.vel[0] + c1 * Cr * (agent.p_best[0] - agent.position[0]) + c2 * (1-Cr) * (g_best_pos[0] - agent.position[0])
-    new_velocity_y = w * agent.vel[1] + c1 * Cr * (agent.p_best[1] - agent.position[1]) + c2 * (1-Cr) * (g_best_pos[1] - agent.position[1])
-
-    new_velocity = [new_velocity_x, new_velocity_y]
-
-    return new_velocity
-
 def main():
     # Execute code
 
@@ -155,29 +158,40 @@ def main():
     swarm = Swarm(swarm_size, noise_map)
     Cr = chaotic_disturbance(swarm_size)
 
-    bird = pygame.image.load("bird.png")
     running = True
+    condition = True
     while running:
-        # Runs PSO Loop
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                break
+        # Runs pygame
+        if condition:
+            for i in range(max_iters):
+                
+                # Closes pygame even if window closed before max_iters reached
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        break
+                if not running:
+                    break
+                
+                # Runs PSO loop
+                draw_noise_map(noise_map)
+                swarm.update_global_best()
 
-        
-        draw_noise_map(noise_map)
-        swarm.update_global_best()
+                for cr_num, agent in enumerate(swarm.agents):
+                    screen.blit(bird, agent.position)
+                    agent.vel = update_velocity(agent, swarm.g_best_pos, Cr[cr_num])
+                    agent.update_position()
+                    agent.update_p_best()
+                    agent.update_fitness()
 
-        for cr_num, agent in enumerate(swarm.agents):
-            screen.blit(bird, agent.position)
-            agent.vel = update_velocity(agent, swarm.g_best_pos, Cr[cr_num])
-            agent.update_position()
-            agent.update_p_best()
-            agent.update_fitness()
-
-        pygame.display.flip()
-
-        screen.fill((0,0,0))
+                pygame.display.flip()
+                clock.tick(60)
+                screen.fill((0,0,0))
+            condition = False
 
 # Startup Code
 

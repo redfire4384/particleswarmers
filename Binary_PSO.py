@@ -4,7 +4,6 @@ import numpy as np
 
 pygame.init()
 
-bird = pygame.image.load("bird.png")
 # Constants
 c1, c2 = 2.49445, 2.49445
 k = 4
@@ -12,6 +11,8 @@ u = 1
 screen_width, screen_height = 800, 800
 tile_size = 20
 swarm_size = 100
+max_iters = 5000
+bird = pygame.image.load("bird.png")
 
 if screen_width % tile_size != 0:
     raise ValueError("nuh uh")
@@ -59,6 +60,31 @@ def draw_noise_map(noise_map):
         for y in range(noise_map_size[1]):
             color = value_to_color(noise_map[x, y])
             pygame.draw.rect(screen, color, (x * tile_size, y * tile_size, tile_size, tile_size))
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def update_velocity(agent, g_best_pos):
+    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
+
+    r1 = random.uniform(0, 1)
+    r2 = random.uniform(0, 1)
+
+    new_velocity_x = w * agent.vel[0] + c1 * r1 * (agent.p_best[0] - agent.position[0]) + c2 * r2 * (g_best_pos[0] - agent.position[0])
+    new_velocity_y = w * agent.vel[1] + c1 * r1 * (agent.p_best[1] - agent.position[1]) + c2 * r2 * (g_best_pos[1] - agent.position[1])
+
+    new_velocity = [new_velocity_x, new_velocity_y]
+
+    probability_x = sigmoid(new_velocity[0])
+    probability_y = sigmoid(new_velocity[1])
+
+    # Sigmoid function to determine whether or not binary capabilities are applied to agent
+    if random.uniform(0, 1) < probability_x:
+        agent.position[0] = 1 - agent.position[0]
+    if random.uniform(0, 1) < probability_y:
+        agent.position[1] = 1 - agent.position[1]
+
+    return new_velocity
 
 class Agent:
     # Particle object
@@ -108,30 +134,6 @@ class Swarm:
                 self.g_best_fit = agent.fitness
                 self.g_best_pos = agent.position
 
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-def update_velocity(agent, g_best_pos):
-    # Updates velocity based on an agents current positon, their previous best position, the swarm's global best position, and a given inertia weight and acceleration constants
-
-    r1 = random.uniform(0, 1)
-    r2 = random.uniform(0, 1)
-
-    new_velocity_x = w * agent.vel[0] + c1 * r1 * (agent.p_best[0] - agent.position[0]) + c2 * r2 * (g_best_pos[0] - agent.position[0])
-    new_velocity_y = w * agent.vel[1] + c1 * r1 * (agent.p_best[1] - agent.position[1]) + c2 * r2 * (g_best_pos[1] - agent.position[1])
-
-    new_velocity = [new_velocity_x, new_velocity_y]
-
-    probability_x = sigmoid(new_velocity[0])
-    probability_y = sigmoid(new_velocity[1])
-
-    # Sigmoid function to determine whether or not binary capabilities are applied to agent
-    if random.uniform(0, 1) < probability_x:
-        agent.position[0] = 1 - agent.position[0]
-    if random.uniform(0, 1) < probability_y:
-        agent.position[1] = 1 - agent.position[1]
-
-    return new_velocity
 
 def main():
     # Executes code
@@ -139,23 +141,39 @@ def main():
     noise_map = make_height_map()
     swarm = Swarm(100, noise_map)
     running = True
+    condition = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                break
+        # Runs pygame
+        if condition:
+            for i in range(max_iters):
+                
+                # Closes pygame even if window closed before max_iters reached
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
+                        break
+                if not running:
+                    break
+                
+                # Runs PSO loop
+                draw_noise_map(noise_map)
+                swarm.update_global_best()
 
-        draw_noise_map(noise_map)
-        swarm.update_global_best()
+                for agent in swarm.agents:
+                    screen.blit(bird, agent.position)
+                    agent.vel = update_velocity(agent, swarm.g_best_pos)
+                    agent.update_position()
+                    agent.update_p_best()
+                    agent.update_fitness()
 
-        for agent in swarm.agents:
-            screen.blit(bird, agent.position)
-            agent.vel = update_velocity(agent, swarm.g_best_pos)
-            agent.update_position()
-            agent.update_p_best()
-            agent.update_fitness()
+                pygame.display.flip()
+                clock.tick(60)
+                screen.fill((0,0,0))
+            condition = False
 
-        pygame.display.flip()
-        clock.tick(60)
-        screen.fill((0,0,0))
 
 main()
